@@ -4,20 +4,43 @@ import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import make_interp_spline
 
 
 def my_func(x):
     """ Пользовательская функция. """
     # 1 / math.tan(x) + x ** 2 периодическая (0, pi)
     # x ** 2 * math.cos(2*x) + 1 непрерывная
-    return x ** 2 * math.cos(2*x) + 1
+    return x ** 2 * math.cos(2 * x) + 1
 
 
 def generate_nodes_and_values(x_nodes):
     """ Вычисления значений функции. """
     y_nodes = np.array([my_func(x) for x in x_nodes])
     return y_nodes
+
+
+def gaussian_elimination(A, b):
+    """ Решение системы линейных уравнений Ax = b методом Гаусса. """
+    n = len(b)
+
+    # Прямой ход
+    for i in range(n):
+        # Нормализация текущей строки
+        factor = A[i, i]
+        A[i] = A[i] / factor
+        b[i] /= factor
+
+        for j in range(i + 1, n):
+            factor = A[j, i]
+            A[j] = A[j] - factor * A[i]
+            b[j] -= factor * b[i]
+
+    # Обратный ход
+    x = np.zeros(n)
+    for i in range(n - 1, -1, -1):
+        x[i] = b[i] - np.dot(A[i, i + 1:], x[i + 1:])
+
+    return x
 
 
 # Распределения ////////////////////////////////////////////////////////////////////////////////////////////////////// #
@@ -84,41 +107,36 @@ def newton_interpolation(x, y, x_test):
     return np.array([newton_polynomial(xi) for xi in x_test])
 
 
-def spline_interpolation(x_nodes, y_nodes, x_test, degree=3):
-    """ Интерполяция сплайнами с возможностью выбора степени. """
-    # Проверим, что x_nodes строго возрастают
-    if not np.all(np.diff(x_nodes) > 0):
-        sorted_indices = np.argsort(x_nodes)
-        x_nodes = x_nodes[sorted_indices]
-        y_nodes = y_nodes[sorted_indices]
-    spline = make_interp_spline(x_nodes, y_nodes, k=degree)
-    return spline(x_test)
-
-
 def linear_spline(x_nodes, y_nodes, x_test):
     """ Линейный сплайн S{1,0}"""
-    a = np.diff(y_nodes) / np.diff(x_nodes)
-    b = y_nodes[:-1]
+    a = y_nodes[:-1]
+    b = np.diff(y_nodes) / np.diff(x_nodes)
 
+    # Интерполяция значений сплайна для заданных x_test
     y_spline = np.zeros_like(x_test)
-    for i in range(len(b)):
+    for i in range(len(a)):
         # Индексируем, где x_test находится в текущем отрезке
         idx = (x_test >= x_nodes[i]) & (x_test <= x_nodes[i + 1])
         # Вычисляем значения сплайна для текущего отрезка
         dx = x_test[idx] - x_nodes[i]
-        y_spline[idx] = a[i] * dx + b[i]
+        y_spline[idx] = a[i] + b[i] * dx
 
     return y_spline
 
 
 def quadratic_spline(x_nodes, y_nodes, x_test):
     """ Квадратичный сплайн S{2,1}(x) """
+    return
+
+
+def cubic_spline(x_nodes, y_nodes, x_test):
+    """ Кубический сплайн S{3,2} """
     n = len(x_nodes) - 1  # Количество отрезков
     h = np.diff(x_nodes)  # Шаги между узлами
 
     # Инициализация матрицы A и вектора b
-    A = np.zeros((n + 1, n + 1))  # Матрица размером (n+1, n+1)
-    b_vec = np.zeros(n + 1)  # Вектор для системы уравнений
+    A = np.zeros((n + 1, n + 1))
+    b_vec = np.zeros(n + 1)
 
     # Заполнение матрицы A и вектора b
     for i in range(1, n):
@@ -128,56 +146,22 @@ def quadratic_spline(x_nodes, y_nodes, x_test):
         b_vec[i] = 3 * ((y_nodes[i + 1] - y_nodes[i]) / h[i] - (y_nodes[i] - y_nodes[i - 1]) / h[i - 1])
 
     # Граничные условия: натуральный сплайн
-    A[0, 0], A[n, n] = 1, 1  # Вторая производная на концах равна нулю
-
-    # Решение системы для коэффициентов c (вторая производная)
-    c = np.linalg.solve(A, b_vec)
-
-    # Вычисление коэффициентов b и a для каждого отрезка
-    b_coeff = np.diff(y_nodes) / h - h * (2 * c[:-1] + c[1:]) / 3
-    a_coeff = (c[1:] - c[:-1]) / (3 * h)
-    y_nodes_coeff = y_nodes[:-1]
-
-    # Инициализация массива для значений сплайна
-    y_spline = np.zeros_like(x_test)
-
-    # Интерполяция значений сплайна для заданных x_test
-    for i in range(len(y_nodes_coeff)):
-        # Определяем индексы, где x_test находится в текущем отрезке
-        idx = (x_test >= x_nodes[i]) & (x_test <= x_nodes[i + 1])
-        dx = x_test[idx] - x_nodes[i]
-        # Вычисляем значения сплайна на текущем отрезке
-        y_spline[idx] = a_coeff[i] * dx ** 2 + b_coeff[i] * dx + y_nodes_coeff[i]
-
-    return y_spline
-
-
-def cubic_spline(x_nodes, y_nodes, x_test):
-    """ Кубический сплайн S{3,2} """
-    n = len(x_nodes) - 1  # Количество отрезков
-    h = np.diff(x_nodes)
-    A = np.zeros((n + 1, n + 1))
-    b = np.zeros(n + 1)
-
-    # Заполнение системы для кубического сплайна
-    for i in range(1, n):
-        A[i, i - 1] = h[i - 1]
-        A[i, i] = 2 * (h[i - 1] + h[i])
-        A[i, i + 1] = h[i]
-        b[i] = 3 * ((y_nodes[i + 1] - y_nodes[i]) / h[i] - (y_nodes[i] - y_nodes[i - 1]) / h[i - 1])
-
-    # Граничные условия: натуральный сплайн
     A[0, 0] = A[n, n] = 1
-    c = np.linalg.solve(A, b)
+
+    # Решение системы для коэффициентов
+    c = gaussian_elimination(A, b_vec)
 
     a = y_nodes[:-1]
     b = np.diff(y_nodes) / h - h * (2 * c[:-1] + c[1:]) / 3
     d = (c[1:] - c[:-1]) / (3 * h)
 
+    # Интерполяция значений сплайна для заданных x_test
     y_spline = np.zeros_like(x_test)
-    for i in range(len(a)):
+    for i in range(n):
+        # Индексируем, где x_test находится в текущем отрезке
         idx = (x_test >= x_nodes[i]) & (x_test <= x_nodes[i + 1])
         dx = x_test[idx] - x_nodes[i]
+        # Вычисляем значения сплайна для текущего отрезка
         y_spline[idx] = a[i] + b[i] * dx + c[i] * dx ** 2 + d[i] * dx ** 3
 
     return y_spline
@@ -190,10 +174,13 @@ def interpolate(x_nodes, y_nodes, x_fine, method):
             return lagrange_interpolation(x_nodes, y_nodes, x_fine)
         case "newton":
             return newton_interpolation(x_nodes, y_nodes, x_fine)
-        case "spline":
-            return spline_interpolation(x_nodes, y_nodes, x_fine)
+        case "linear_spline":
+            return linear_spline(x_nodes, y_nodes, x_fine)
+        case "cubic_spline":
+            return cubic_spline(x_nodes, y_nodes, x_fine)
         case _:
-            raise ValueError("Метод интерполяции должен быть из ['lagrange', 'newton', 'spline']")
+            raise ValueError("Метод интерполяции должен быть из\n"
+                             "['lagrange', 'newton', 'linear_spline', 'quadratic_spline', 'cubic_spline']")
 
 
 # Основные расчёты /////////////////////////////////////////////////////////////////////////////////////////////////// #
@@ -217,7 +204,8 @@ def plot_and_save_interpolations(a, b, n_values, m_values, plot_dir, interpolati
         interp_values = interpolate(x_nodes, y_nodes, x_fine, interpolation_method)
         max_dev = max_deviation(my_func, x_fine, interp_values)
         print(
-            f"n = {n_values[i]}, m = {m_values[i]} ({distribution_method}): Макс. откл. ({interpolation_method}) = {max_dev:.10f}")
+            f"n = {n_values[i]}, m = {m_values[i]} ({distribution_method}): "
+            f"Макс. откл. ({interpolation_method}) = {max_dev:.10f}")
 
         # Построение графика
         plt.figure(figsize=(12, 6))
@@ -254,7 +242,7 @@ def main():
     print(f"Исследуемый интервал: [{a}, {b}]")
 
     distribution_methods = ["evenly", "chebyshev"]
-    interpolation_methods = ["lagrange", "newton", "spline"]
+    interpolation_methods = ["lagrange", "newton", "linear_spline", "cubic_spline"]
 
     # Путь для сохранения результатов
     plot_dir = 'plots'
