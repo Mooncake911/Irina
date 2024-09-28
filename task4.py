@@ -46,8 +46,8 @@ def gaussian_elimination(A, b):
 # Распределения ////////////////////////////////////////////////////////////////////////////////////////////////////// #
 def chebyshev_distributed_nodes(a, b, n):
     """ Генерация узлов Чебышёва на интервале [a, b]. """
-    i = np.arange(0, n+1)
-    nodes = 0.5 * (b - a) * np.cos((2 * i + 1) * np.pi / (2 * (n + 1))) + 0.5 * (b + a)
+    i = np.arange(0, n)  # здесь n кол-во узлов, а не интервалов
+    nodes = 0.5 * (b - a) * np.cos((2 * i + 1) * np.pi / (2 * n)) + 0.5 * (b + a)
     return np.sort(nodes)
 
 
