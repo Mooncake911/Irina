@@ -7,48 +7,48 @@ from task4 import linear_spline, quadratic_spline, cubic_spline
 
 def linear_spline_test(x_nodes, y_nodes, x_test):
     # Вызов функции для расчета значений сплайна (собственная)
-    y_spline_custom = linear_spline(x_nodes, y_nodes, x_test)
+    y_custom = linear_spline(x_nodes, y_nodes, x_test)
 
     # Сравнение с библиотекой SciPy
     spline_scipy = make_interp_spline(x_nodes, y_nodes, k=1)
-    y_spline_scipy = spline_scipy(x_test)
+    y_scipy = spline_scipy(x_test)
 
     # Визуализация
     plt.plot(x_nodes, y_nodes, 'ro', label='Узлы')
-    plt.plot(x_test, y_spline_custom, label='Линейный сплайн (собственный)')
-    plt.plot(x_test, y_spline_scipy, '--', label='Линейный сплайн (SciPy)')
+    plt.plot(x_test, y_custom, label='Линейный сплайн (собственный)')
+    plt.plot(x_test, y_scipy, '--', label='Линейный сплайн (SciPy)')
     plt.legend()
     plt.show()
 
 
 def quadratic_spline_test(x_nodes, y_nodes, x_test):
     # Вызов функции для расчета значений сплайна (собственная)
-    y_spline_custom = quadratic_spline(x_nodes, y_nodes, x_test)
+    y_custom = quadratic_spline(x_nodes, y_nodes, x_test)
 
     # Сравнение с библиотекой SciPy
     spline_scipy = make_interp_spline(x_nodes, y_nodes, k=2)
-    y_spline_scipy = spline_scipy(x_test)
+    y_scipy = spline_scipy(x_test)
 
     # Визуализация
     plt.plot(x_nodes, y_nodes, 'ro', label='Узлы')
-    plt.plot(x_test, y_spline_custom, label='Квадратичный сплайн (собственный)')
-    plt.plot(x_test, y_spline_scipy, '--', label='Квадратичный сплайн (SciPy)')
+    plt.plot(x_test, y_custom, label='Квадратичный сплайн (собственный)')
+    plt.plot(x_test, y_scipy, '--', label='Квадратичный сплайн (SciPy)')
     plt.legend()
     plt.show()
 
 
 def cubic_spline_test(x_nodes, y_nodes, x_test):
     # Вызов функции для расчета значений сплайна (собственная)
-    y_spline_custom = cubic_spline(x_nodes, y_nodes, x_test)
+    y_custom = cubic_spline(x_nodes, y_nodes, x_test)
 
     # Сравнение с библиотекой SciPy
     spline_scipy = make_interp_spline(x_nodes, y_nodes, k=3)
-    y_spline_scipy = spline_scipy(x_test)
+    y_scipy = spline_scipy(x_test)
 
     # Визуализация
     plt.plot(x_nodes, y_nodes, 'ro', label='Узлы')
-    plt.plot(x_test, y_spline_custom, label='Кубический сплайн (собственный)')
-    plt.plot(x_test, y_spline_scipy, '--', label='Кубический сплайн (SciPy)')
+    plt.plot(x_test, y_custom, label='Кубический сплайн (собственный)')
+    plt.plot(x_test, y_scipy, '--', label='Кубический сплайн (SciPy)')
     plt.legend()
     plt.show()
 
