@@ -46,9 +46,9 @@ def gaussian_elimination(A, b):
 # Распределения ////////////////////////////////////////////////////////////////////////////////////////////////////// #
 def chebyshev_distributed_nodes(a, b, n):
     """ Генерация узлов Чебышёва на интервале [a, b]. """
-    i = np.arange(0, n + 1)
-    nodes = 0.5 * (b - a) * np.cos((2 * i + 1) * np.pi / (2 * (n + 1))) + 0.5 * (a + b)
-    return nodes
+    i = np.arange(0, n)
+    nodes = 0.5 * (b - a) * np.cos((2 * i + 1) * np.pi / (2 * (n + 1))) + 0.5 * (b + a)
+    return np.sort(nodes)
 
 
 def evenly_distributed_nodes(a, b, n):
@@ -184,33 +184,30 @@ def interpolate(x_nodes, y_nodes, x_fine, method):
 
 
 # Основные расчёты /////////////////////////////////////////////////////////////////////////////////////////////////// #
-def max_deviation(f, x_values, p):
-    """ Максимальное отклонение. """
-    deviations = np.abs(np.array([f(xi) for xi in x_values]) - p)
-    return np.max(deviations)
-
-
 def plot_and_save_interpolations(a, b, n_values, m_values, plot_dir, interpolation_method, distribution_method):
     """ Построение графиков для каждого n с выбранным методом интерполяции. """
     for i in range(len(n_values)):
         # Генерация узлов интерполирования (n)
         x_nodes = distribution(a, b, n_values[i], distribution_method)
+        x_nodes[0] = a   # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
+        x_nodes[-1] = b  # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
         y_nodes = generate_nodes_and_values(x_nodes)
 
         # Генерация точек для вычисления отклонения (m)
-        x_fine = distribution(a, b, m_values[i], "evenly")
+        x_test = distribution(a, b, m_values[i], "evenly")
+        y_test = np.array([my_func(xi) for xi in x_test])
 
         # Интерполяция
-        interp_values = interpolate(x_nodes, y_nodes, x_fine, interpolation_method)
-        max_dev = max_deviation(my_func, x_fine, interp_values)
-        print(
-            f"n = {n_values[i]}, m = {m_values[i]} ({distribution_method}): "
-            f"Макс. откл. ({interpolation_method}) = {max_dev:.10f}")
+        y_interp = interpolate(x_nodes, y_nodes, x_test, interpolation_method)
+        max_dev = np.max(np.abs(y_test - y_interp))
+        print(f"n = {n_values[i]}, m = {m_values[i]} ({distribution_method}): "
+              f"Макс. откл. ({interpolation_method}) = {max_dev:.10f}")
 
         # Построение графика
         plt.figure(figsize=(12, 6))
-        plt.plot(x_fine, [my_func(xi) for xi in x_fine], label='Исходная функция my_func(x)')
-        plt.plot(x_fine, interp_values, linestyle='--',
+        plt.plot(x_nodes, y_nodes, 'ro', label='Узлы')
+        plt.plot(x_test, y_test, label='Исходная функция my_func(x)')
+        plt.plot(x_test, y_interp, linestyle='--',
                  label=f'Полином {interpolation_method}, n={n_values[i]}, m={m_values[i]}')
 
         # Настройки графика
@@ -236,7 +233,7 @@ def create_directory(path):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// #
 def main():
-    a, b = -10 + 0.1, 10 - 0.1  # Интервал [a, b]
+    a, b = 0 + 0.1, math.pi - 0.1  # Интервал [a, b]
     n_values = [5, 10, 15, 20]  # Количество узлов интерполирования
     m_values = [500, 1000, 1500, 2000]  # Количество точек для вычисления отклонения
     print(f"Исследуемый интервал: [{a}, {b}]")
