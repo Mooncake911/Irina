@@ -111,9 +111,6 @@ def linear_spline(x_nodes, y_nodes, x_test):
     return y_spline
 
 
-import numpy as np
-
-
 def quadratic_spline(x_nodes, y_nodes, x_test):
     """ Квадратичный сплайн S{2,1}(x) """
     n = len(x_nodes) - 1  # Количество отрезков
