@@ -42,7 +42,7 @@ def cubic_spline_test(x_nodes, y_nodes, x_test):
     y_custom = cubic_spline(x_nodes, y_nodes, x_test)
 
     # Сравнение с библиотекой SciPy
-    spline_scipy = make_interp_spline(x_nodes, y_nodes, k=3)
+    spline_scipy = make_interp_spline(x_nodes, y_nodes, k=3, bc_type='natural')
     y_scipy = spline_scipy(x_test)
 
     # Визуализация
@@ -57,11 +57,13 @@ def main():
     # Пример узлов
     x_nodes = np.array([0, 1, 2, 3, 4])
     y_nodes = np.array([1, 2, 0, 2, 1])
+
     # Точки, для которых мы хотим найти значения сплайна
     x_test = np.linspace(0, 4, 100)
 
+    # Тестирование сплайнов
     linear_spline_test(x_nodes, y_nodes, x_test)
-    # quadratic_spline_test(x_nodes, y_nodes, x_test)
+    quadratic_spline_test(x_nodes, y_nodes, x_test)
     cubic_spline_test(x_nodes, y_nodes, x_test)
 
 

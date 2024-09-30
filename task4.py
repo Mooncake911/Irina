@@ -119,8 +119,41 @@ def linear_spline(x_nodes, y_nodes, x_test):
 
 
 def quadratic_spline(x_nodes, y_nodes, x_test):
-    """ Квадратичный сплайн S{2,1}(x) """
-    return
+    """ Квадратичный сплайн S{2,1} """
+    n = len(x_nodes) - 1  # Количество отрезков
+    h = np.diff(x_nodes)  # Шаги между узлами
+
+    # Инициализация матрицы A и вектора b для решения коэффициентов c
+    A = np.zeros((n + 1, n + 1))
+    b_vec = np.zeros(n + 1)
+
+    # Заполнение матрицы A и вектора b
+    for i in range(1, n):
+        A[i, i - 1] = h[i - 1]
+        A[i, i] = 2 * (h[i - 1] + h[i])
+        A[i, i + 1] = h[i]
+        b_vec[i] = 3 * ((y_nodes[i + 1] - y_nodes[i]) / h[i] - (y_nodes[i] - y_nodes[i - 1]) / h[i - 1])
+
+    # Граничные условия: натуральный сплайн
+    A[0, 0] = A[n, n] = 1
+
+    # Решение системы для коэффициентов
+    c = gaussian_elimination(A, b_vec)
+
+    # Вычисление коэффициентов a и b
+    a = y_nodes[:-1]
+    b = np.diff(y_nodes) / h - h * c[:-1] / 2
+
+    # Интерполяция значений сплайна для заданных x_test
+    y_spline = np.zeros_like(x_test)
+    for i in range(n):
+        # Индексируем, где x_test находится в текущем отрезке
+        idx = (x_test >= x_nodes[i]) & (x_test <= x_nodes[i + 1])
+        dx = x_test[idx] - x_nodes[i]
+        # Вычисляем значения квадратичного сплайна для текущего отрезка
+        y_spline[idx] = a[i] + b[i] * dx + c[i] * dx ** 2 / 2
+
+    return y_spline
 
 
 def cubic_spline(x_nodes, y_nodes, x_test):
@@ -170,6 +203,8 @@ def interpolate(x_nodes, y_nodes, x_fine, method):
             return newton_interpolation(x_nodes, y_nodes, x_fine)
         case "linear_spline":
             return linear_spline(x_nodes, y_nodes, x_fine)
+        case "quadratic_spline":
+            return quadratic_spline(x_nodes, y_nodes, x_fine)
         case "cubic_spline":
             return cubic_spline(x_nodes, y_nodes, x_fine)
         case _:
@@ -233,7 +268,7 @@ def main():
     print(f"Исследуемый интервал: [{a}, {b}]")
 
     distribution_methods = ["evenly", "chebyshev"]
-    interpolation_methods = ["lagrange", "newton", "linear_spline", "cubic_spline"]
+    interpolation_methods = ["lagrange", "newton", "linear_spline", "quadratic_spline", "cubic_spline"]
 
     # Путь для сохранения результатов
     plot_dir = 'plots/task4'

@@ -41,9 +41,11 @@ def main():
     # Пример узлов
     x_nodes = np.array([0, 1, 2, 3, 4])
     y_nodes = np.array([1, 2, 0, 2, 1])
+
     # Точки, для которых мы хотим найти значения сплайна
     x_test = np.linspace(0, 4, 100)
 
+    # Тестирование интерполяции
     lagrange_interpolation_test(x_nodes, y_nodes, x_test)
     newton_interpolation_test(x_nodes, y_nodes, x_test)
 
