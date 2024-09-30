@@ -13,12 +13,6 @@ def my_func(x):
     return x ** 2 * math.cos(2 * x) + 1
 
 
-def generate_nodes_and_values(x_nodes):
-    """ Вычисления значений функции. """
-    y_nodes = np.array([my_func(x) for x in x_nodes])
-    return y_nodes
-
-
 def gaussian_elimination(A, b):
     """ Решение системы линейных уравнений Ax = b методом Гаусса. """
     n = len(b)
@@ -191,7 +185,7 @@ def plot_and_save_interpolations(a, b, n_values, m_values, plot_dir, interpolati
         x_nodes = distribution(a, b, n_values[i], distribution_method)
         x_nodes[0] = a   # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
         x_nodes[-1] = b  # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
-        y_nodes = generate_nodes_and_values(x_nodes)
+        y_nodes = np.array([my_func(x) for x in x_nodes])
 
         # Генерация точек для вычисления отклонения (m)
         x_test = distribution(a, b, m_values[i], "evenly")
@@ -242,7 +236,7 @@ def main():
     interpolation_methods = ["lagrange", "newton", "linear_spline", "cubic_spline"]
 
     # Путь для сохранения результатов
-    plot_dir = 'plots'
+    plot_dir = 'plots/task4'
     create_directory(plot_dir)
 
     for dist_method in distribution_methods:
