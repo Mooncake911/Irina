@@ -27,8 +27,20 @@ def gaussian_elimination(A, b):
 
 
 def hessenberg(A):
-    """ Приведение матрицы к форме Хессенберга. """
-    return np.linalg.qr(A)[1]
+    """ Приведение матрицы A к форме Хессенберга. """
+    H = np.copy(A)
+    n = H.shape[0]
+
+    for k in range(n-2):
+        x = H[k+1:, k]
+        e = np.zeros_like(x)
+        e[0] = np.linalg.norm(x)
+        u = x + np.sign(x[0]) * e
+        u = u / np.linalg.norm(u)
+        H[k+1:, k:] -= 2.0 * np.outer(u, u @ H[k+1:, k:])
+        H[:, k+1:] -= 2.0 * np.outer(H[:, k+1:] @ u, u)
+
+    return H
 
 
 def gram_schmidt(A):
@@ -124,32 +136,41 @@ def inverse_power_method(A, lambda_prev, delta=1e-8, tol=1e-6, max_iterations=10
 
 
 def qr_algorithm(A, tol=1e-8, max_iterations=1000):
-    """ QR-алгоритм со сдвигами для нахождения всех собственных чисел матрицы A. """
-    n = A.shape[0]
-    A_hess = hessenberg(A)  # Приведение к форме Хессенберга
+    """ QR-алгоритм со сдвигами для нахождения собственных чисел """
+    # Шаг 1: Приведение матрицы A к форме Хессенберга для ускорения вычислений
+    H = hessenberg(A)
+    n = H.shape[0]
     eigenvalues = []
 
-    while n > 1:
-        for _ in range(max_iterations):
-            # Сдвиг: используем нижний правый элемент в качестве сдвига
-            sigma = A_hess[n - 1, n - 1]
+    # Шаг 2: Основной цикл по уменьшению размерности матрицы
+    for i in range(n - 1, 0, -1):
+        iter_count = 0
 
-            # QR-разложение для (A - sigma*I)
-            Q, R = gram_schmidt(A_hess - sigma * np.eye(n))
-            A_hess = np.dot(R, Q) + sigma * np.eye(n)
+        # Шаг 3: Итерации для нахождения одного собственного числа
+        while iter_count < max_iterations:
+            # Сдвиг по последнему элементу
+            shift = H[i, i]
 
-            # Проверяем сходимость для нижнего правого элемента
-            if np.abs(A_hess[n - 1, n - 2]) < tol:
-                # Найдено собственное число
-                eigenvalues.append(A_hess[n - 1, n - 1])
-                A_hess = A_hess[:n - 1, :n - 1]  # Уменьшаем размерность матрицы
-                n -= 1
+            # Шаг 4: QR-разложение с использованием сдвига
+            # выполняем разложение матрицы H[:i+1, :i+1] - shift * I
+            shifted_matrix = H[:i + 1, :i + 1] - shift * np.eye(i + 1)
+            Q, R = gram_schmidt(shifted_matrix)
+
+            # Шаг 5: Обновление матрицы H как R @ Q + shift * I
+            H[:i + 1, :i + 1] = R @ Q + shift * np.eye(i + 1)
+
+            # Шаг 6: Проверка на сходимость по элементу под главной диагональю
+            if np.abs(H[i, i - 1]) < tol:
+                # Если достигнута сходимость, выходим из цикла
                 break
+            iter_count += 1
 
-    # Для матрицы 1x1
-    if n == 1:
-        eigenvalues.append(A_hess[0, 0])
+        eigenvalues.append(H[i, i])  # Сохраняем найденное собственное число
 
+        # Шаг 7: Понижение размерности матрицы
+        H = H[:i, :i]  # Понижение размерности
+
+    eigenvalues.append(H[0, 0])  # Последнее собственное число
     return np.array(eigenvalues)
 
 

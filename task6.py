@@ -73,7 +73,14 @@ def gram_schmidt(A):
             R[j, i] = np.dot(Q[:, j], Q[:, i])
             Q[:, i] -= R[j, i] * Q[:, j]
         R[i, i] = np.linalg.norm(Q[:, i])
-        Q[:, i] /= R[i, i]
+
+        # Проверка деления на ноль
+        if R[i, i] > 1e-10:
+            Q[:, i] /= R[i, i]
+        else:
+            # Если R[i, i] близок к нулю, то нормализуем вектор Q[:, i] и устанавливаем R[i, i] в 1
+            Q[:, i] = np.zeros(n)
+            Q[i, i] = 1.0
 
     return Q, R
 
