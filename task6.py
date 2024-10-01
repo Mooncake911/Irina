@@ -25,6 +25,7 @@ def generate_data(f, x_values, error_level=0.1, num_values=3):
     return np.array(x_data), np.array(y_data)
 
 
+# Дополнительные вычисления ////////////////////////////////////////////////////////////////////////////////////////// #
 def gaussian_elimination(A, b):
     """ Решение системы линейных уравнений Ax = b методом Гаусса. """
     n = len(b)
@@ -49,7 +50,6 @@ def gaussian_elimination(A, b):
     return x
 
 
-# Дополнительные вычисления ////////////////////////////////////////////////////////////////////////////////////////// #
 def vandermonde(x_nodes, degree):
     """ Построение матрицы Вандермонда. """
     A = np.zeros((len(x_nodes), degree + 1))
@@ -113,7 +113,7 @@ def normal_polynomial_approximation(x_nodes, y_nodes, degree):
 
 
 def orthogonal_polynomial_approximation(x_nodes, y_nodes, degree):
-    """Оценка значения степенного полинома с данными коэффициентами."""
+    """ Оценка значения степенного полинома с данными коэффициентами. """
     # Создаем матрицу степеней узлов
     A = vandermonde(x_nodes, degree)
     # Метод наименьших квадратов. Ортогонализация с помощью Грамма-Шмидта.

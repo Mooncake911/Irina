@@ -218,6 +218,7 @@ def plot_and_save_interpolations(a, b, n_values, m_values, plot_dir, interpolati
     for i in range(len(n_values)):
         # Генерация узлов интерполирования (n)
         x_nodes = distribution(a, b, n_values[i], distribution_method)
+        # if interpolation_method in ["linear_spline", "quadratic_spline", "cubic_spline"]:
         x_nodes[0] = a   # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
         x_nodes[-1] = b  # необходимое условие для сплайнов (для остальных методов можно убрать, но лучше оставить)
         y_nodes = np.array([my_func(x) for x in x_nodes])
