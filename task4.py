@@ -10,7 +10,7 @@ def my_func(x):
     """ Пользовательская функция. """
     # 1 / math.tan(x) + x ** 2 периодическая (0, pi)
     # x ** 2 * math.cos(2*x) + 1 непрерывная
-    return x ** 2 * math.cos(2 * x) + 1
+    return 1 / math.tan(x) + x ** 2
 
 
 def gaussian_elimination(A, b):
@@ -229,25 +229,44 @@ def plot_and_save_interpolations(a, b, n_values, m_values, plot_dir, interpolati
 
         # Интерполяция
         y_interp = interpolate(x_nodes, y_nodes, x_test, interpolation_method)
-        max_dev = np.max(np.abs(y_test - y_interp))
+        dev_error = np.abs(y_test - y_interp)
+        dev_index = np.argmax(dev_error)
         print(f"n = {n_values[i]}, m = {m_values[i]} ({distribution_method}): "
-              f"Макс. откл. ({interpolation_method}) = {max_dev:.10f}")
+              f"Макс. откл. ({interpolation_method}) = {dev_error[dev_index]:.10f}")
 
-        # Построение графика
+        # Построение графиков
         plt.figure(figsize=(12, 6))
+
+        # Построение графика 1 (Интерполяция)
+        plt.subplot(2, 1, 1)
         plt.plot(x_nodes, y_nodes, 'ro', label='Узлы')
         plt.plot(x_test, y_test, label='Исходная функция my_func(x)')
         plt.plot(x_test, y_interp, linestyle='--',
                  label=f'Полином {interpolation_method}, n={n_values[i]}, m={m_values[i]}')
 
-        # Настройки графика
         plt.legend()
-        plt.title(f"Интерполяция методом {interpolation_method.capitalize()}, n = {n_values[i]}, m = {m_values[i]}")
+        plt.title(f"Интерполяция методом {interpolation_method.capitalize()}\n "
+                  f"Распределение методом {distribution_method.capitalize()}\n"
+                  f"n = {n_values[i]}, m = {m_values[i]}")
         plt.xlabel("x")
         plt.ylabel("my_func(x)")
         plt.grid(True)
 
-        # Сохранение графика как изображения
+        # Построение графика 2 (Абсолютная погрешность)
+        plt.subplot(2, 1, 2)
+        plt.plot(x_test, np.abs(y_test - y_interp), label='Абсолютная погрешность')
+        plt.scatter(x_test[dev_index], dev_error[dev_index],  color='red', zorder=2,
+                    label=f'Max ошибка ({x_test[dev_index]:.10f}, {dev_error[dev_index]:.10f})')
+
+        plt.legend()
+        plt.title(f'График абсолютной погрешности')
+        plt.xlabel('x')
+        plt.ylabel('Ошибка')
+        plt.grid(True)
+
+        # Сохранение графиков как изображение
+        plt.tight_layout()
+        plt.subplots_adjust(hspace=0.5)
         filename = f"{plot_dir}/plot_{distribution_method}_{interpolation_method}_{n_values[i]}_{m_values[i]}.png"
         plt.savefig(filename)
         plt.close()
@@ -263,9 +282,9 @@ def create_directory(path):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// #
 def main():
-    a, b = -10 + 0.1, 10 - 0.1  # Интервал [a, b]
-    n_values = [5, 10, 15, 20]  # Количество узлов интерполирования
-    m_values = [500, 1000, 1500, 2000]  # Количество точек для вычисления отклонения
+    a, b = 0 + 0.1, np.pi - 0.1  # Интервал [a, b]
+    n_values = [20, 30, 50, 60]  # Количество узлов интерполирования
+    m_values = [200, 200, 200, 200]  # Количество точек для вычисления отклонения
     print(f"Исследуемый интервал: [{a}, {b}]")
 
     distribution_methods = ["evenly", "chebyshev"]
